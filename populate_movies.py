@@ -3,9 +3,9 @@ import requests
 
 # Database configuration
 DB_HOST = "localhost"
-DB_NAME = "movies_database"
-DB_USER = "your_username"
-DB_PASS = "your_password"
+DB_NAME = "moviedb"
+DB_USER = "tina"
+DB_PASS = "123"
 
 # TMDB API configuration
 API_KEY = "your_api_key"

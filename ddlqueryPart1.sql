@@ -1,7 +1,7 @@
 -- Table for storing main movie information
 CREATE TABLE content_rating (
     id SERIAL PRIMARY KEY,
-    rating VARCHAR(10) UNIQUE NOT NULL
+    rating VARCHAR(10) NOT NULL
 );
 
 CREATE TABLE movie (
@@ -27,8 +27,6 @@ CREATE TABLE keyword (
     id SERIAL PRIMARY KEY,
     keyword VARCHAR(50) UNIQUE NOT NULL
 );
-
-
 
 CREATE TABLE country (
     id SERIAL PRIMARY KEY,

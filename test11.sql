@@ -1,0 +1,7 @@
+
+
+
+SELECT * from movie
+
+
+
