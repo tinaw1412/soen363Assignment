@@ -1,3 +1,10 @@
+-- Insert content ratings first
+INSERT INTO content_rating (rating) VALUES
+('PG'),
+('PG-13'),
+('R'),
+('NC-17');
+
 -- Insert countries
 INSERT INTO country (full_name, short_code) VALUES
 ('United States', 'US'),
@@ -14,13 +21,6 @@ INSERT INTO genre (name) VALUES
 ('Horror'),
 ('Romance');
 
--- Insert content ratings
-INSERT INTO content_rating (rating) VALUES
-('PG'),
-('PG-13'),
-('R'),
-('NC-17');
-
 -- Insert keywords
 INSERT INTO keyword (keyword) VALUES
 ('superhero'),
@@ -29,24 +29,24 @@ INSERT INTO keyword (keyword) VALUES
 ('adventure'),
 ('mystery');
 
--- Insert movies
+-- Insert movies with correct content_rating_id references
 INSERT INTO movie (tmdb_id, imdb_id, title, plot, content_rating_id, viewers_rating, release_year, akas, watchmode_id)
 VALUES
-('12345', 'tt0468569', 'The Dark Knight', 'Batman faces off against the Joker, a criminal mastermind who wants to create chaos in Gotham City.', 3, 9.0, 2008, '', '12345'),
-('67890', 'tt1375666', 'Inception', 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.', 2, 8.8, 2010, '', '67890'),
-('11223', 'tt0120338', 'Titanic', 'A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.', 4, 7.8, 1997, '', '11223'),
-('44556', 'tt0133093', 'The Matrix', 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.', 3, 8.7, 1999, '', '44556'),
-('78901', 'tt4154796', 'Avengers: Endgame', 'After the devastating events of Avengers: Infinity War, the Avengers must assemble once again to undo the damage caused by Thanos.', 2, 8.4, 2019, '', '78901');
+('12345', 'tt0468569', 'The Dark Knight', 'Batman faces off against the Joker, a criminal mastermind who wants to create chaos in Gotham City.', 106, 9.0, 2008, '', '12345'),
+('67890', 'tt1375666', 'Inception', 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.', 105, 8.8, 2010, '', '67890'),
+('11223', 'tt0120338', 'Titanic', 'A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.', 107, 7.8, 1997, '', '11223'),
+('44556', 'tt0133093', 'The Matrix', 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.', 106, 8.7, 1999, '', '44556'),
+('78901', 'tt4154796', 'Avengers: Endgame', 'After the devastating events of Avengers: Infinity War, the Avengers must assemble once again to undo the damage caused by Thanos.', 105, 8.4, 2019, '', '78901');
 
 -- Insert movie genres
 INSERT INTO movie_genre (movie_id, genre_id) VALUES
-(1, 1),  -- The Dark Knight -> Action
-(2, 1),  -- Inception -> Action
-(3, 2),  -- Titanic -> Comedy
-(4, 1),  -- The Matrix -> Action
-(5, 1);  -- Avengers: Endgame -> Action
+(1, 1),
+(2, 1),
+(3, 2),
+(4, 1),
+(5, 1);
 
--- Insert movie actors
+-- Insert movie actors (ensure actor names exist)
 INSERT INTO movie_actor (movie_id, actor_id) VALUES
 (1, (SELECT id FROM actor WHERE name = 'Christian Bale')),
 (1, (SELECT id FROM actor WHERE name = 'Heath Ledger')),

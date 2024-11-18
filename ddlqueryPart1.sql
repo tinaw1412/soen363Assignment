@@ -1,4 +1,3 @@
--- Table for storing main movie information
 CREATE TABLE content_rating (
     id SERIAL PRIMARY KEY,
     rating VARCHAR(10) NOT NULL
@@ -20,33 +19,33 @@ CREATE TABLE movie (
 
 CREATE TABLE genre (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL
+    name VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE keyword (
     id SERIAL PRIMARY KEY,
-    keyword VARCHAR(50) UNIQUE NOT NULL
+    keyword VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE country (
     id SERIAL PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
-    short_code CHAR(2) UNIQUE NOT NULL
+    short_code CHAR(2) NOT NULL
 );
 
 CREATE TABLE language (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL
+    name VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE actor (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
+    name VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE director (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
+    name VARCHAR(100)  NOT NULL
 );
 
 

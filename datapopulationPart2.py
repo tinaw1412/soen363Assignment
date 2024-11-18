@@ -4,11 +4,9 @@ import psycopg2
 from psycopg2 import sql
 import random 
 
-# Constants
 API_HOST = "imdb.iamidiotareyoutoo.com"
 API_ENDPOINT = "/search?q={query}"
 
-# PostgreSQL connection details
 DB_CONFIG = {
     "dbname": "moviedb",
     "user": "tina",
@@ -17,32 +15,17 @@ DB_CONFIG = {
     "port": 5432
 }
 
-# Function to fetch movie data using http.client
 def fetch_movie_data(query):
-    # Connect to the API via HTTPS
     conn = http.client.HTTPSConnection("imdb.iamidiotareyoutoo.com")
-    
-    # Create the request URL with the query parameter
     url = f"/search?q={query}"
-    
-    # Send the request
     conn.request("GET", url)
-    
-    # Get the response
     res = conn.getresponse()
-    
-    # Read and decode the response
     data = res.read()
-    
-    # Check for valid response
     if res.status != 200:
         print(f"Error fetching data: {res.status}")
         return None
-    
-    # Convert the response to JSON and return it
     return json.loads(data.decode("utf-8"))
 
-# Function to insert content rating (use placeholder for now)
 def insert_content_rating(conn, rating="PG-13"):
     with conn.cursor() as cursor:
         cursor.execute("""
@@ -50,12 +33,10 @@ def insert_content_rating(conn, rating="PG-13"):
             VALUES (%s)
             RETURNING id 
         """, (rating,))
-        result = cursor.fetchone()  # Get the ID of the inserted rating
+        result = cursor.fetchone()
         conn.commit()
         return result[0] 
-       
 
-# Function to insert movie data
 def insert_movie_data(conn, movie, content_rating_id):
     with conn.cursor() as cursor:
         try:
@@ -70,19 +51,18 @@ def insert_movie_data(conn, movie, content_rating_id):
                 movie.get("#TMDB_ID", random.randint(1, 100)),
                 movie.get("#IMDB_ID"),
                 movie.get("#TITLE"),
-                movie.get("#PLOT", " "),  # Assuming there's a "#PLOT" key
+                movie.get("#PLOT", " "),
                 content_rating_id,
-                None,  # No viewers rating in this response
+                None,
                 movie.get("#YEAR", None),
                 movie.get("#AKA", ""),
-                None  # No watchmode_id in this response
+                None
             ))
-            return cursor.fetchone()[0]  # Return movie id
+            return cursor.fetchone()[0]
         except Exception as e:
             print(f"Error inserting movie data: {e}")
             return None
 
-# Function to insert actors
 def insert_actors(conn, movie_id, actors):
     with conn.cursor() as cursor:
         for actor in actors:
@@ -98,16 +78,12 @@ def insert_actors(conn, movie_id, actors):
                 VALUES (%s, %s)
             """, (movie_id, actor_id))
 
-# Main script to process movies from API response
 def process_movies(query):
     conn = psycopg2.connect(**DB_CONFIG)
-    conn.autocommit = False  # Use transaction for bulk operationss
+    conn.autocommit = False  
     data = fetch_movie_data(query)
 
     try:
-        # Fetch movie data from API using http.client
-
-        # Check if data is valid
         if not data:
             print("No valid data fetched from the API.")
             return
@@ -116,10 +92,8 @@ def process_movies(query):
             print("No valid movie descriptions found in API response.")
             return
 
-        # Debug print to check the data structure
         print(json.dumps(data, indent=2))
 
-        # Process the data if response is valid
         if data.get("ok"):
             descriptions = data.get("description", [])
             if not descriptions:
@@ -128,18 +102,15 @@ def process_movies(query):
 
             for movie in descriptions:
                 try:
-                    # Insert content rating
                     content_rating_id = insert_content_rating(conn)
                     if not content_rating_id:
                         raise ValueError("Failed to insert content rating.")
 
-                    # Insert movie data
                     movie_id = insert_movie_data(conn, movie, content_rating_id)
                     if not movie_id:
                         print(f"Skipping movie due to insert failure: {movie.get('#TITLE', 'Unknown')}")
                         continue
 
-                    # Insert actors
                     actors = movie.get("#ACTORS", " ").split(",") if "#ACTORS" in movie else []
                     insert_actors(conn, movie_id, actors)
 
@@ -147,7 +118,6 @@ def process_movies(query):
                     print(f"Error processing movie: {movie.get('#TITLE', 'Unknown')}. Error: {e}")
                     conn.rollback()
                     continue  
-            # Commit after all movies are processed
             conn.commit()
             print("Data successfully committed.")
         else:
@@ -158,11 +128,9 @@ def process_movies(query):
     finally:
         conn.close()
 
-# Main function
 def main():
     query = input("Enter search query: ")
     process_movies(query)
 
 if __name__ == "__main__":
     main()
-

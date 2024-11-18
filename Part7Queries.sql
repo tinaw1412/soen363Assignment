@@ -11,7 +11,7 @@ SELECT
     m.tmdb_id, 
     m.imdb_id, 
     m.title, 
-    m.release_year,  -- Adjusted to 'release_year' based on your schema
+    m.release_year,  
     m.watchmode_id
 FROM 
     movie m
@@ -49,7 +49,7 @@ HAVING
 
 -- E) For each language, list how many movies are there in the database, ordered by highest count
 SELECT 
-    l.name AS language_name,  -- Adjusted to 'name' from 'language_name'
+    l.name AS language_name,  
     COUNT(m.id) AS movie_count
 FROM 
     language l
@@ -73,7 +73,7 @@ JOIN
 JOIN 
     genre g ON mg.genre_id = g.id
 WHERE 
-    g.name = 'Comedy'  -- Adjusted to 'name' from 'genre_name'
+    g.name = 'Comedy'  
 ORDER BY 
     m.viewers_rating DESC
 LIMIT 2;

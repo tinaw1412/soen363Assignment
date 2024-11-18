@@ -1,7 +1,0 @@
-
-
-
-SELECT * from movie
-
-
-
