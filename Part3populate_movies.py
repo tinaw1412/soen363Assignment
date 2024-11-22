@@ -6,9 +6,17 @@ DB_NAME = "moviedb"
 DB_USER = "tina"
 DB_PASS = "123"
 
-API_KEY = "your_api_key"
-BASE_URL = "https://api.themoviedb.org/3/movie/"
+#API_KEY = "your_api_key"
+url = "https://api.themoviedb.org/3/search/movie?query={query}&page=1"
 
+headers = {
+    "accept": "application/json",
+    "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5N2UzMmRhZWYwZDAxNTU5ZmJiODM5MDhkMGI3ZDAxOCIsIm5iZiI6MTczMjI0MDM4My4xODcyNjgzLCJzdWIiOiI2NzNmZTJiZjMyYTlhYWY0M2Q5NjcwODkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ZeB4kOPhSLmv294gVX1wArXo95jIh0trbk_KpxJwVuw"
+}
+
+response = requests.get(url, headers=headers)
+
+print(response.text)
 conn = psycopg2.connect(
     host=DB_HOST,
     database=DB_NAME,

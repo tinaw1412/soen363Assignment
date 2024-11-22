@@ -48,7 +48,7 @@ def insert_movie_data(conn, movie, content_rating_id):
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
-                movie.get("#TMDB_ID", random.randint(1, 100)),
+                movie.get("#TMDB_ID", random.randint(1, 1000)),
                 movie.get("#IMDB_ID"),
                 movie.get("#TITLE"),
                 movie.get("#PLOT", " "),
@@ -66,13 +66,25 @@ def insert_movie_data(conn, movie, content_rating_id):
 def insert_actors(conn, movie_id, actors):
     with conn.cursor() as cursor:
         for actor in actors:
+            actor_name = actor.strip()
+            # Check if the actor already exists
             cursor.execute("""
-                INSERT INTO actor (name)
-                VALUES (%s)
-                ON CONFLICT (name) DO NOTHING
-                RETURNING id
-            """, (actor.strip(),))
-            actor_id = cursor.fetchone()[0]
+                SELECT id FROM actor WHERE name = %s
+            """, (actor_name,))
+            actor_id = cursor.fetchone()
+
+            if actor_id is None:
+                # If the actor does not exist, insert it
+                cursor.execute("""
+                    INSERT INTO actor (name)
+                    VALUES (%s)
+                    RETURNING id
+                """, (actor_name,))
+                actor_id = cursor.fetchone()[0]
+            else:
+                actor_id = actor_id[0]  # Get the existing actor's ID
+
+            # Insert the movie-actor relationship
             cursor.execute("""
                 INSERT INTO movie_actor (movie_id, actor_id)
                 VALUES (%s, %s)
