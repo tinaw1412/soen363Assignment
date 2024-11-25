@@ -1,108 +1,118 @@
-import psycopg2
 import requests
+import psycopg2
+import json
 
-DB_HOST = "localhost"
-DB_NAME = "moviedb"
-DB_USER = "tina"
-DB_PASS = "123"
-
-#API_KEY = "your_api_key"
-url = "https://api.themoviedb.org/3/search/movie?query={query}&page=1"
-
-headers = {
-    "accept": "application/json",
-    "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5N2UzMmRhZWYwZDAxNTU5ZmJiODM5MDhkMGI3ZDAxOCIsIm5iZiI6MTczMjI0MDM4My4xODcyNjgzLCJzdWIiOiI2NzNmZTJiZjMyYTlhYWY0M2Q5NjcwODkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ZeB4kOPhSLmv294gVX1wArXo95jIh0trbk_KpxJwVuw"
+# Database configuration
+DB_CONFIG = {
+    "host": "localhost",
+    "dbname": "moviedb",
+    "user": "tina",
+    "password": "123",
+    "port": 5432
 }
 
-response = requests.get(url, headers=headers)
+# TMDB API configuration
+API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5N2UzMmRhZWYwZDAxNTU5ZmJiODM5MDhkMGI3ZDAxOCIsIm5iZiI6MTczMjI0MDM4My4xODcyNjgzLCJzdWIiOiI2NzNmZTJiZjMyYTlhYWY0M2Q5NjcwODkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ZeB4kOPhSLmv294gVX1wArXo95jIh0trbk_KpxJwVuw"
+API_URL = "https://api.themoviedb.org/3/search/movie"
 
-print(response.text)
-conn = psycopg2.connect(
-    host=DB_HOST,
-    database=DB_NAME,
-    user=DB_USER,
-    password=DB_PASS
-)
+# Database connection setup
+conn = psycopg2.connect(**DB_CONFIG)
 cur = conn.cursor()
 
-def fetch_movie_data(movie_id):
-    """Fetch movie data from TMDB API."""
-    url = f"{BASE_URL}{movie_id}?api_key={API_KEY}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Failed to fetch data for movie ID {movie_id}")
+# Fetch movie data from TMDB API
+def fetch_movie_data(query):
+    try:
+        url = f"{API_URL}?query={query}&page=1"
+        headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {API_KEY}"
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.json().get("results", [])
+        else:
+            print(f"Error fetching data: {response.status_code}")
+            return []
+    except Exception as e:
+        print(f"Exception during API call: {e}")
+        return []
+
+# Helper function to insert data into a table
+def get_or_create(table, field, value):
+    try:
+        cur.execute(f"SELECT id FROM {table} WHERE {field} = %s", (value,))
+        result = cur.fetchone()
+        if result:
+            return result[0]
+        else:
+            cur.execute(f"INSERT INTO {table} ({field}) VALUES (%s) RETURNING id", (value,))
+            conn.commit()
+            return cur.fetchone()[0]
+    except Exception as e:
+        conn.rollback()
+        print(f"Error in get_or_create for {table}: {e}")
         return None
 
-def insert_movie_data(movie_data):
-    """Insert fetched movie data into the database."""
+# Insert movie data into the database
+def insert_movie_data(movie):
     try:
-        content_rating = movie_data.get("adult")  
-        cur.execute("""
-            INSERT INTO content_rating (rating) 
-            VALUES (%s) 
-            ON CONFLICT (rating) DO NOTHING 
-            RETURNING id
-        """, (content_rating,))
-        content_rating_id = cur.fetchone()[0]
+        # Insert content rating if available
+        content_rating_id = None
+        if "content_rating" in movie:
+            content_rating_id = get_or_create("content_rating", "rating", movie["content_rating"])
 
+        # Insert main movie data
         cur.execute("""
-            INSERT INTO movie (tmdb_id, imdb_id, title, plot, content_rating_id, viewers_rating, release_year, watchmode_id) 
+            INSERT INTO movie (tmdb_id, title, plot, viewers_rating, release_year, content_rating_id, akas, watchmode_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (
-            movie_data.get("id"),
-            movie_data.get("imdb_id"),
-            movie_data.get("title"),
-            movie_data.get("overview"),
+            movie["id"],
+            movie["title"],
+            movie.get("overview", ""),
+            movie.get("vote_average", 0),
+            movie.get("release_date", "1900-01-01").split("-")[0],
             content_rating_id,
-            movie_data.get("vote_average"),
-            movie_data.get("release_date").split("-")[0],
-            movie_data.get("watchmode_id")
+            movie.get("aka", ""),
+            movie.get("watchmode_id", "")
         ))
-        movie_id = cur.fetchone()[0]
+        movie_id = cur.fetchone()[0]        
 
-        genres = movie_data.get("genres", [])
-        for genre in genres:
-            cur.execute("""
-                INSERT INTO movie_genre (movie_id, genre_id)
-                VALUES (%s, %s)
-            """, (movie_id, genre["id"]))
+        # Insert additional fields like actors, directors, countries, etc.
+        for actor in movie.get("actors", []):
+            actor_id = get_or_create("actor", "name", actor)
+            cur.execute("INSERT INTO movie_actor (movie_id, actor_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (movie_id, actor_id))
 
-        countries = movie_data.get("production_countries", [])
-        for country in countries:
-            cur.execute("""
-                INSERT INTO movie_country (movie_id, country_id)
-                VALUES (%s, %s)
-            """, (movie_id, country["iso_3166_1"]))
+        for director in movie.get("directors", []):
+            director_id = get_or_create("director", "name", director)
+            cur.execute("INSERT INTO movie_director (movie_id, director_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (movie_id, director_id))
 
-        languages = movie_data.get("spoken_languages", [])
-        for language in languages:
-            cur.execute("""
-                INSERT INTO movie_language (movie_id, language_id)
-                VALUES (%s, %s)
-            """, (movie_id, language["iso_639_1"]))
-
-        keywords_response = requests.get(f"{BASE_URL}{movie_data.get('id')}/keywords?api_key={API_KEY}")
-        if keywords_response.status_code == 200:
-            keywords_data = keywords_response.json()
-            for keyword in keywords_data.get("keywords", []):
-                cur.execute("""
-                    INSERT INTO movie_keyword (movie_id, keyword_id)
-                    VALUES (%s, %s)
-                """, (movie_id, keyword["id"]))
+        for keyword in movie.get("keywords", []):
+            keyword_id = get_or_create("keyword", "keyword", keyword)
+            cur.execute("INSERT INTO movie_keyword (movie_id, keyword_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (movie_id, keyword_id))
 
         conn.commit()
-        print(f"Inserted data for movie: {movie_data.get('title')}")
+        print(f"Inserted movie: {movie['title']} with ID: {movie_id}")
     except Exception as e:
         conn.rollback()
-        print(f"Failed to insert movie data: {e}")
+        print(f"Error inserting movie data: {e}")
 
-for movie_id in range(1, 51):
-    movie_data = fetch_movie_data(movie_id)
-    if movie_data:
-        insert_movie_data(movie_data)
+# Main processing function
+def process_movies(query):
+    movies = fetch_movie_data(query)
+    if not movies:
+        print("No movies found for the query.")
+        return
+    for movie in movies:
+        insert_movie_data(movie)
 
-cur.close()
-conn.close()
+# Main function
+def main():
+    query = input("Enter a movie search query: ")
+    process_movies(query)
+    cur.close()
+    conn.close()
+
+if __name__ == "__main__":
+    main()
+
