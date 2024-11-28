@@ -21,6 +21,13 @@ INSERT INTO genre (name) VALUES
 ('Horror'),
 ('Romance');
 
+INSERT INTO director (name) VALUES
+('Christopher Nolan'),
+('James Cameron'),
+('The Wachowskis'),
+('Anthony Russo'),
+('Joe Russo');
+
 -- Insert keywords
 INSERT INTO keyword (keyword) VALUES
 ('superhero'),
@@ -40,11 +47,11 @@ VALUES
 
 -- Insert movie genres
 INSERT INTO movie_genre (movie_id, genre_id) VALUES
-(1, 1),
-(2, 1),
-(3, 2),
-(4, 1),
-(5, 1);
+(295, 51),
+(296, 51),
+(297, 52),
+(298, 51),
+(299, 51);
 
 -- Insert movie actors (ensure actor names exist)
 INSERT INTO movie_actor (movie_id, actor_id) VALUES

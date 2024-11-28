@@ -48,7 +48,7 @@ def insert_movie_data(conn, movie, content_rating_id):
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
-                movie.get("#TMDB_ID", random.randint(1, 1000)),
+                movie.get("#TMDB_ID", random.randint(5000, 10000)),
                 movie.get("#IMDB_ID"),
                 movie.get("#TITLE"),
                 movie.get("#PLOT", " "),
