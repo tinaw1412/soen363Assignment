@@ -36,6 +36,7 @@ LOAD CSV WITH HEADERS FROM 'file:///movie_keywordTable.csv' AS row
 MATCH (m:Movie {id: toInteger(row.movie_id)}), (k:Keyword {id: toInteger(row.keyword_id)})
 CREATE (m)-[:HAS_KEYWORD]->(k);
 
+
 // Create Country nodes
 LOAD CSV WITH HEADERS FROM 'file:///countryTable.csv' AS row
 CREATE (:Country {id: toInteger(row.id), full_name: row.full_name, short_code: row.short_code});
